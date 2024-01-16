@@ -43,7 +43,7 @@ df.head()
 df.info()
 
 st.set_page_config(layout='wide')
-st.title('Retail Analytics')
+st.title('Restaurant Analytics')
 
 # Set layout to start from the left
 st.markdown(
