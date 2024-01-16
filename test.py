@@ -68,7 +68,7 @@ with col1:
                                              x='Month_Number', 
                                              y='Quantity', 
                                              color='Category',
-                                             title='Overall Quantity by Category',
+                                             title='Overall Quantity of Foods Sold by Category',
                                              labels={'Month_Number': 'Month_Number', 'Quantity': 'Total Quantity Sold'},
                                             )
     fig_quantity_by_category_month.update_layout(xaxis=dict(title='Month'),
