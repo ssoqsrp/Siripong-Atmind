@@ -18,6 +18,8 @@ df['Time Taken to Serve'] = df['Serve Time'] - df['Order Time']
 
 # Convert "Date" column to datetime
 df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
+df['Month'] = df['Date'].dt.month
+df['Week'] = df['Date'].dt.isocalendar().week
 
 _month = pd.to_datetime(df['Date']).dt.month
 month = _month.apply(lambda x: cl.month_name[x])
@@ -27,12 +29,8 @@ df['month'] =month
 month_order = {'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12}
 df['Month_Number'] = df['month'].map(month_order)
 
-# Aggregate total sales for each category in each month
-agg_price = df.groupby(['Month_Number', 'Category'], as_index=False)['Price'].sum()
-
 # Create Quantity column
 df['Quantity'] = 1
-
 
 
 
@@ -43,7 +41,7 @@ df.head()
 df.info()
 
 st.set_page_config(layout='wide')
-st.title('Restaurant Analytics')
+st.title('Retail Analytics')
 
 # Set layout to start from the left
 st.markdown(
@@ -57,42 +55,71 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+# Group by Category and Month_Number
+quantity_by_category_month = df.groupby(['Category', 'Month_Number']).agg({'Menu': 'count'}).reset_index()
+quantity_by_category_month = quantity_by_category_month.rename(columns={'Menu': 'Quantity'})
+
+avg_quantity_by_month = quantity_by_category_month.groupby('Month_Number')['Quantity'].mean().reset_index()
+avg_quantity_by_month['Category'] = 'AVG'
+
+quantity_by_category_month_with_avg = pd.concat([quantity_by_category_month, avg_quantity_by_month])
+
+# Aggregate total sales for each category in each month
+agg_price = df.groupby(['Month_Number', 'Category'], as_index=False)['Price'].sum()
+
+# Calculate average price for each month
+avg_price_by_month = agg_price.groupby('Month_Number')['Price'].mean().reset_index()
+avg_price_by_month['Category'] = 'AVG'
+
+# Concatenate the original data with the average data
+agg_price_with_avg = pd.concat([agg_price, avg_price_by_month])
+
+
+
 # Create two columns layout
 col1, col2 = st.columns(2)
 
 # Line Chart for Quantity by Category and Month
 with col1:
-    quantity_by_category_month = df.groupby(['Category', 'Month_Number']).agg({'Menu': 'count'}).reset_index()
-    quantity_by_category_month = quantity_by_category_month.rename(columns={'Menu': 'Quantity'})
-    fig_quantity_by_category_month = px.line(quantity_by_category_month, 
-                                             x='Month_Number', 
-                                             y='Quantity', 
-                                             color='Category',
-                                             title='Overall Quantity of Foods Sold by Category',
-                                             labels={'Month_Number': 'Month_Number', 'Quantity': 'Total Quantity Sold'},
-                                            )
-    fig_quantity_by_category_month.update_layout(xaxis=dict(title='Month'),
-                                                 yaxis=dict(title='Total Quantity Sold'),
-                                                 height=500,
-                                                 width=850
-                                                )
+# Plotting the graph
+    fig_quantity_by_category_month = px.line(
+    quantity_by_category_month_with_avg,
+    x='Month_Number',
+    y='Quantity',
+    color='Category',
+    title='Overall Quantity of Foods sold by Category with AVG',
+    labels={'Month_Number': 'Month_Number', 'Quantity': 'Total Quantity Sold'},
+)
+
+# Update layout
+    fig_quantity_by_category_month.update_layout(
+        xaxis=dict(title='Month'),
+        yaxis=dict(title='Total Quantity Sold'),
+        height=500,
+        width=850
+)
     st.plotly_chart(fig_quantity_by_category_month)
+
 
 # Line Chart for Sales by Category
 with col2:
-    agg_price = df.groupby(['Month_Number', 'Category'], as_index=False)['Price'].sum()
-    fig_sales_by_category_line = px.line(agg_price, 
-                                         x='Month_Number', 
-                                         y='Price', 
-                                         color='Category',
-                                         title='Overall Sales by Category',
-                                         labels={'Category': 'Category', 'Price': 'Price', 'Month_Number': 'Month'},
-                                      )
-    fig_sales_by_category_line.update_layout(xaxis=dict(title='Month'),
-                                              yaxis=dict(title='Sales'),
-                                              height=500,
-                                              width=850
-                                            )
+    fig_sales_by_category_line = px.line(
+        agg_price_with_avg,
+        x='Month_Number',
+        y='Price',
+        color='Category',
+        title='Overall Sales by Category with AVG',
+        labels={'Category': 'Category', 'Price': 'Price', 'Month_Number': 'Month'},
+)
+
+# Update layout
+    fig_sales_by_category_line.update_layout(
+        xaxis=dict(title='Month'),
+        yaxis=dict(title='Sales'),
+        height=500,
+        width=850
+)
     st.plotly_chart(fig_sales_by_category_line)
 
 # Add CSS to move col1 to the left
@@ -109,7 +136,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 
 
 # Create 'Total Sales' column by multiplying 'Price' and 'Quantity'
