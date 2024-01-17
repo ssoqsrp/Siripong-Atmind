@@ -88,7 +88,7 @@ with col1:
     x='Month_Number',
     y='Quantity',
     color='Category',
-    title='Overall Quantity of Foods sold by Category with AVG',
+    title='Overall Quantity of Foods sold by Category',
     labels={'Month_Number': 'Month_Number', 'Quantity': 'Total Quantity Sold'},
 )
 
@@ -109,7 +109,7 @@ with col2:
         x='Month_Number',
         y='Price',
         color='Category',
-        title='Overall Sales by Category with AVG',
+        title='Overall Sales by Category',
         labels={'Category': 'Category', 'Price': 'Price', 'Month_Number': 'Month'},
 )
 
