@@ -75,6 +75,17 @@ avg_price_by_month['Category'] = 'AVG'
 # Concatenate the original data with the average data
 agg_price_with_avg = pd.concat([agg_price, avg_price_by_month])
 
+# Filter data for Month_Number 7 and 11
+data_month_7 = agg_price_with_avg[agg_price_with_avg['Month_Number'] == 7]
+data_month_11 = agg_price_with_avg[agg_price_with_avg['Month_Number'] == 11]
+
+# Calculate percentage decrease from Month 7 to Month 11
+percentage_decrease = ((data_month_11['Price'].values - data_month_7['Price'].values) / data_month_7['Price'].values) * 100
+
+# Display the percentage decrease
+print(f"Percentage Decrease from Month 7 to Month 11: {percentage_decrease[0]:.2f}%")
+
+
 
 
 # Create two columns layout
@@ -136,6 +147,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
 # Create 'Total Sales' column by multiplying 'Price' and 'Quantity'
@@ -239,20 +251,35 @@ col1, col2 = st.columns(2)
 # Group by 'Date' and calculate average 'Time Taken to Serve' for each day
 average_time_taken_by_day_of_week = df.groupby('Day Of Week')['Time Taken to Serve'].mean().reset_index()
 
-# Bar Chart for Average Time Taken to Serve by Day Of Week
+# Adjust this part based on your actual data structure
+staff_count_by_day = df.groupby('Day Of Week')[['Kitchen Staff', 'Drinks Staff']].sum().reset_index()
+
+# Melt the DataFrame to combine 'Kitchen Staff' and 'Drinks Staff' into a single column
+staff_count_by_day_melted = staff_count_by_day.melt('Day Of Week', var_name='Staff Type', value_name='Staff Count')
+
+# Group by 'Month' and calculate average 'Time Taken to Serve' for each month
+average_time_taken_by_month = df.groupby('Month')['Time Taken to Serve'].mean().reset_index()
+
+# Adjust this part based on your actual data structure
+staff_count_by_month = df.groupby('Month')[['Kitchen Staff', 'Drinks Staff']].sum().reset_index()
+
+# Melt the DataFrame to combine 'Kitchen Staff' and 'Drinks Staff' into a single column
+staff_count_by_month_melted = staff_count_by_month.melt('Month', var_name='Staff Type', value_name='Staff Count')
+
+# Staff Count of Week
 with col1:
-    fig_time_taken_distribution = px.box(df, 
-                                     x='Day Of Week', 
-                                     y='Time Taken to Serve',
-                                     title='Time Taken to Serve Distribution by Day Of Week',
-                                     labels={'Day Of Week': 'Day Of Week', 'Time Taken to Serve': 'Time Taken to Serve (minutes)'},
-                                     category_orders={'Day Of Week': day_order},
-                                     points=False
-                                     )
-    fig_time_taken_distribution.update_layout(xaxis=dict(title='Day Of Week'),
-                                          yaxis=dict(title='Time Taken to Serve (minutes)'),
-                                          )
-    st.plotly_chart(fig_time_taken_distribution)
+    fig_staff_count_by_month = px.bar(staff_count_by_month_melted, 
+                                   x='Month', 
+                                   y='Staff Count', 
+                                   title='Staff Count by Month',
+                                   labels={'Month': 'Month', 'Staff Count': 'Staff Count', 'Staff Type': 'Staff Type'},
+                                   color='Staff Type',
+                                   barmode='group',
+                                   height=500,
+                                   width=850)  # Use barmode='group' to group bars by 'Staff Type'
+
+# Show the figure
+    st.plotly_chart(fig_staff_count_by_month)
     
 
 # Box Plot for Time Taken to Serve Distribution by Day Of Week
@@ -275,32 +302,52 @@ with col2:
 
 
 
+# Box Plot for Time Taken to Serve Distribution by Day Of Week
+fig_box_time_taken_by_day_of_week = px.box(df, 
+                                            x='Day Of Week', 
+                                            y='Time Taken to Serve',
+                                            title='Time Taken to Serve Distribution by Day Of Week',
+                                            labels={'Day Of Week': 'Day Of Week', 'Time Taken to Serve': 'Time Taken to Serve (minutes)'},
+                                            category_orders={'Day Of Week': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+                                        )
 
-# Assuming df is your DataFrame with the relevant columns
-# Adjust this part based on your actual data structure
-staff_count_by_day = df.groupby('Day Of Week')[['Kitchen Staff', 'Drinks Staff']].sum().reset_index()
-
-# Melt the DataFrame to combine 'Kitchen Staff' and 'Drinks Staff' into a single column
-staff_count_by_day_melted = staff_count_by_day.melt('Day Of Week', var_name='Staff Type', value_name='Staff Count')
-
-# Create a bar chart
-fig_staff_count_by_day = px.bar(staff_count_by_day_melted, 
-                                x='Day Of Week', 
-                                y='Staff Count', 
-                                title='Staff Count by Day Of Week',
-                                labels={'Day Of Week': 'Day Of Week', 'Staff Count': 'Staff Count', 'Staff Type': 'Staff Type'},
-                                color='Staff Type',
-                                barmode='group',
-                                height=500,
-                                width=850)  # Use barmode='group' to group bars by 'Staff Type'
+# Update layout
+fig_box_time_taken_by_day_of_week.update_layout(
+    xaxis=dict(title='Day Of Week'),
+    yaxis=dict(title='Time Taken to Serve (minutes)'),
+    height=500,
+    width=850
+)
 
 # Show the figure
-st.plotly_chart(fig_staff_count_by_day)
+st.plotly_chart(fig_box_time_taken_by_day_of_week)
 
 
+# set two columns layout
+col1, col2 = st.columns(2)
+
+# Sort the data by 'Time Taken to Serve' in descending order to see the highest values first
+top_time_taken = df.sort_values(by='Time Taken to Serve', ascending=False).head(10)
+
+# Add a new column 'Day' to display the day name
+top_time_taken['Day'] = top_time_taken['Date'].dt.day_name()
+
+# Display the relevant columns for analysis
+top_time_taken_analysis = top_time_taken[['Date', 'Day', 'Order Time', 'Serve Time', 'Menu', 'Time Taken to Serve', 'Kitchen Staff', 'Drinks Staff']]
+
+# Show the top 10 time taken to serve with day name
+with col1:
+    st.write("**Top 10 Time Taken to Serve with Day Name**")
+    st.dataframe(top_time_taken_analysis)
 
 
+# Group by 'Day Of Week' and count the number of orders for each day
+orders_by_day_of_week = df.groupby('Day Of Week')['Quantity'].sum().reset_index()
 
+# Display the relevant columns for analysis
+with col2:
+    st.write("**Total of Orders by Day Of Week**")
+    st.dataframe(orders_by_day_of_week)
 
 
 
@@ -312,3 +359,25 @@ df.head()
 df.info()
 df.shape
 df.tail()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
