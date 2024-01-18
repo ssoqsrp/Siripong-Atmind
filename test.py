@@ -103,7 +103,6 @@ with col1:
     labels={'Month_Number': 'Month_Number', 'Quantity': 'Total Quantity Sold'},
 )
 
-# Update layout
     fig_quantity_by_category_month.update_layout(
         xaxis=dict(title='Month'),
         yaxis=dict(title='Total Quantity Sold'),
@@ -124,7 +123,6 @@ with col2:
         labels={'Category': 'Category', 'Price': 'Price', 'Month_Number': 'Month'},
 )
 
-# Update layout
     fig_sales_by_category_line.update_layout(
         xaxis=dict(title='Month'),
         yaxis=dict(title='Sales'),
@@ -211,8 +209,8 @@ with col2:
 # set two columns layout
 col1, col2 = st.columns(2)
 
-with col1:
 # Create a bar chart for popular menu
+with col1:
     fig = px.bar(popular_menu, x='Menu', y='Quantity Sold', title='Quantity Sold by Menus',
              labels={'Menu': 'Menu', 'Quantity Sold': 'Quantity Sold'})
     st.plotly_chart(fig)
@@ -278,7 +276,7 @@ with col1:
                                    height=500,
                                    width=850)  # Use barmode='group' to group bars by 'Staff Type'
 
-# Show the figure
+
     st.plotly_chart(fig_staff_count_by_month)
     
 
@@ -311,7 +309,7 @@ fig_box_time_taken_by_day_of_week = px.box(df,
                                             category_orders={'Day Of Week': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
                                         )
 
-# Update layout
+
 fig_box_time_taken_by_day_of_week.update_layout(
     xaxis=dict(title='Day Of Week'),
     yaxis=dict(title='Time Taken to Serve (minutes)'),
@@ -319,7 +317,7 @@ fig_box_time_taken_by_day_of_week.update_layout(
     width=850
 )
 
-# Show the figure
+
 st.plotly_chart(fig_box_time_taken_by_day_of_week)
 
 
